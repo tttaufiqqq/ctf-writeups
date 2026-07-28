@@ -3,7 +3,7 @@
 **Platform:** TryHackMe (Internal UTeM CTF)  
 **Room:** Own the Box, Claim the Crown  
 **Difficulty:** Beginner  
-**Date:** 2026-06-11  
+**Date:** 11/06/2026  
 **Author:** Taufiq  
 
 ---

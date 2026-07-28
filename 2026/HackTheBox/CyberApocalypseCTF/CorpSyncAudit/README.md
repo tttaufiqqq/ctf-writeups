@@ -1,9 +1,12 @@
 # 03 - CorpSyncAudit
 
 **Category:** Reverse Engineering
-**Points:** not shown on the challenge card in this session - fill in from the platform
-**Difficulty:** not shown on the challenge card in this session - fill in from the platform
+**Points:** 975
+**Difficulty:** Hard
+**Solved:** 26/07/2026 02:57
 **Flag:** `HTB{d473_71m3_4nd_64ckd00r5}`
+
+![CorpSyncAudit - scenario pwned](./assets/pwned.png)
 
 **Approach & tooling note:** this was a genuine multi-hour reversing job on a
 414KB stripped PE32+ binary, not something you get through in one pass. I

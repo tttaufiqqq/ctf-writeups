@@ -3,8 +3,13 @@
 **Category:** Forensics
 **Points:** 1000
 **Difficulty:** Easy
+**Solved:** 25/07/2026 17:44
 **Flags:** 8/8 (Flag 1 corrected after an initial wrong submission - see the
 callout in Step 2)
+
+![Deception Strategy - scenario pwned](./assets/pwned.png)
+
+![Deception Strategy - 8/8 flags](./assets/flags.png)
 
 **Approach & tooling note:** this one was a genuine multi-hour investigation
 across a 611MB disk image, a 674MB Process Monitor log, and a pcap - not

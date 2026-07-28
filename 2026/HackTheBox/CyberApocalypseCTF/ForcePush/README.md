@@ -1,8 +1,11 @@
 # 01 - Force Push
 
 **Category:** Forensics
-**Points:** 875
+**Points:** 825
 **Difficulty:** Very Easy
+**Solved:** 25/07/2026 16:58
+
+![Force Push - scenario pwned](./assets/pwned.png)
 
 **Approach & tooling note:** I worked this one myself using standard `git`
 plumbing commands - nothing here required anything beyond `git log`,
