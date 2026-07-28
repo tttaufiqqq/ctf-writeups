@@ -4,7 +4,9 @@ My personal collection of CTF writeups.
 
 ## HackTheBox
 
-### Cyber Apocalypse CTF
+### [Cyber Apocalypse CTF 2026: The Salt Crown](./2026/HackTheBox/CyberApocalypseCTF/)
+
+Jul 24 – Jul 29, 2026 · https://ctf.hackthebox.com/event/details/cyber-apocalypse-ctf-2026-the-salt-crown
 
 | Challenge | Category | Difficulty | Tags | Date |
 |---|---|---|---|---|
