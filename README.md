@@ -10,9 +10,9 @@ My personal collection of CTF writeups.
 
 | Challenge | Category | Difficulty | Tags | Date |
 |---|---|---|---|---|
-| [CorpSyncAudit](./2026/HackTheBox/CyberApocalypseCTF/CorpSyncAudit/) | Reverse Engineering | Hard | radare2, ghidra, wine, gdb | 26/07/2026 |
 | [Force Push](./2026/HackTheBox/CyberApocalypseCTF/ForcePush/) | Forensics | Very Easy | git, forensics | 25/07/2026 |
 | [Deception Strategy](./2026/HackTheBox/CyberApocalypseCTF/DeceptionStrategy/) | Forensics | Easy | DFIR, procmon, pcap, radare2, ghidra, RC4 | 25/07/2026 |
+| [CorpSyncAudit](./2026/HackTheBox/CyberApocalypseCTF/CorpSyncAudit/) | Reverse Engineering | Hard | radare2, ghidra, wine, gdb | 26/07/2026 |
 
 ## TryHackMe
 
