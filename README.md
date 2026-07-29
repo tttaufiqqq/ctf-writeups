@@ -16,6 +16,7 @@ My personal collection of CTF writeups.
 | [What the Shard Displayed](./2026/HackTheBox/CyberApocalypseCTF/WhatTheShardDisplayed/) | Hardware | Medium | i2c, sigrok, ssd1306, logic-analyzer | 28/07/2026 |
 | [Second Stamp](./2026/HackTheBox/CyberApocalypseCTF/SecondStamp/) | Blockchain | Medium | sui, move, defi, package-upgrade, ptb | 28/07/2026 |
 | [Wireless Connections](./2026/HackTheBox/CyberApocalypseCTF/WirelessConnections/) | Hardware | Hard | esp32-s3, xtensa, ghidra, firmware, esp-now | 29/07/2026 |
+| [False Order](./2026/HackTheBox/CyberApocalypseCTF/FalseOrder/) | Cloud | Medium | aws, cloudtrail, s3-versioning, iam, assume-role | 28/07/2026 |
 
 ## TryHackMe
 
