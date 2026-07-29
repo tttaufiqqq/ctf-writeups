@@ -20,3 +20,4 @@
 | [Second Stamp](./SecondStamp/) | Blockchain | Medium | sui, move, defi, package-upgrade, ptb | 28/07/2026 |
 | [Wireless Connections](./WirelessConnections/) | Hardware | Hard | esp32-s3, xtensa, ghidra, firmware, esp-now | 29/07/2026 |
 | [False Order](./FalseOrder/) | Cloud | Medium | aws, cloudtrail, s3-versioning, iam, assume-role | 28/07/2026 |
+| [Crownspire Transfer](./CrownspireTransfer/) | ICS | Medium | iec-104, scada, rtu, protocol-auth | 28/07/2026 |
