@@ -8,19 +8,18 @@
 
 ![False Order - flags panel](./assets/flags-panel.png)
 
-**Approach & tooling note:** I used Claude Code as a supporting/execution
-aid on this one - probing the two exposed ports to work out which one was
-the AWS-compatible API endpoint versus the credential-delivery briefing
-page, driving the AWS CLI against the challenge's endpoint, and writing a
-short Python script to paginate and parse the full `lookup-events` output
-into a sortable timeline (609 CloudTrail events is not something you want
-to eyeball page by page). The actual investigative calls - which S3
-object version was the "real" one, which source IP was the internal
-gatehouse system versus the attacker, why the attacker's choice of
-`roleSessionName` mattered, which of the three `AssumeRole` calls was the
-one that actually succeeded - were mine, and I cross-checked every answer
-against the raw `CloudTrailEvent` JSON (not just the summary fields)
-before treating it as final. Happy to walk through this live if asked.
+**Approach & tooling note:**
+
+- I used Claude Code as a supporting/execution aid on this one:
+  - Probing the two exposed ports to work out which one was the AWS-compatible API endpoint versus the credential-delivery briefing page.
+  - Driving the AWS CLI against the challenge's endpoint.
+  - Writing a short Python script to paginate and parse the full `lookup-events` output into a sortable timeline (609 CloudTrail events is not something you want to eyeball page by page).
+- The actual investigative calls were mine:
+  - Which S3 object version was the "real" one.
+  - Which source IP was the internal gatehouse system versus the attacker.
+  - Why the attacker's choice of `roleSessionName` mattered.
+  - Which of the three `AssumeRole` calls was the one that actually succeeded.
+- I cross-checked every answer against the raw `CloudTrailEvent` JSON (not just the summary fields) before treating it as final. Happy to walk through this live if asked.
 
 ## Challenge Description
 
@@ -41,18 +40,15 @@ before treating it as final. Happy to walk through this live if asked.
 | "small marks that copyists miss" | A subtle field-level change between two versions of the same object - i.e. an object-versioning diff. |
 | "who changed it" | The challenge wants attribution - which identity/session made the change, not just what changed. |
 
-The actual briefing page (served on the second port, once I found it)
-dropped the lore entirely and just told me outright: read-only
-investigator access to CloudTrail trail `coalition-gate-audit-trail` and
-versioned bucket `ashguard-order-custody`, start at
-`custody/east-gate-order.json`, correlate its version history with the
-audit events. So this is an S3-versioning-plus-CloudTrail attribution
-exercise, dressed up in Salt Crown lore.
+- The actual briefing page (served on the second port, once I found it) dropped the lore entirely and just told me outright:
+  - Read-only investigator access to CloudTrail trail `coalition-gate-audit-trail`.
+  - Versioned bucket `ashguard-order-custody`.
+  - Start at `custody/east-gate-order.json`, correlate its version history with the audit events.
+- So this is an S3-versioning-plus-CloudTrail attribution exercise, dressed up in Salt Crown lore.
 
 ## Step 1 - Working out which port is which
 
-The instance card gave two `IP:PORT` pairs with no other labels. I
-probed both before assuming anything:
+- The instance card gave two `IP:PORT` pairs with no other labels. I probed both before assuming anything:
 
 ```
 $ curl -sI http://<ip>:<port-A>/
@@ -63,16 +59,10 @@ $ curl -s http://<ip>:<port-B>/
 {"__type":"AccessDeniedException","message":"User is not authorized to perform: MissingAuthentication"}
 ```
 
-Port A serves a small custom Python webserver (`SaltCrownBriefing`) -
-that's the human-facing briefing page. Port B returns a raw AWS-shaped
-JSON error (`MissingAuthentication`) with `x-amzn-RequestId` headers -
-that's a LocalStack-style AWS API endpoint expecting SigV4-signed
-requests. The briefing page itself confirms this split explicitly: *"Point
-`AWS_ENDPOINT_URL` at the instance IP and the AWS API port from your
-instance card, not the briefing port in the address bar."*
-
-Fetching `/player-creds.json` from the briefing port handed me an access
-key/secret for an IAM user called `gate-investigator`:
+- Port A serves a small custom Python webserver (`SaltCrownBriefing`) - that's the human-facing briefing page.
+- Port B returns a raw AWS-shaped JSON error (`MissingAuthentication`) with `x-amzn-RequestId` headers - that's a LocalStack-style AWS API endpoint expecting SigV4-signed requests.
+- The briefing page itself confirms this split explicitly: *"Point `AWS_ENDPOINT_URL` at the instance IP and the AWS API port from your instance card, not the briefing port in the address bar."*
+- Fetching `/player-creds.json` from the briefing port handed me an access key/secret for an IAM user called `gate-investigator`:
 
 ```
 $ curl -s http://<ip>:<briefing-port>/player-creds.json
@@ -85,8 +75,7 @@ $ curl -s http://<ip>:<briefing-port>/player-creds.json
 }
 ```
 
-Pointed the AWS CLI at the real API port instead of the placeholder
-`127.0.0.1:4566` in that JSON, and confirmed identity:
+- Pointed the AWS CLI at the real API port instead of the placeholder `127.0.0.1:4566` in that JSON, and confirmed identity:
 
 ```
 $ export AWS_ENDPOINT_URL=http://<ip>:<api-port>
@@ -104,10 +93,7 @@ $ aws sts get-caller-identity
 
 ## Step 2 - Diffing the object's version history
 
-The briefing named the exact object, so I went straight for its version
-history rather than a bucket-wide listing (which was denied anyway -
-`gate-investigator` doesn't have `s3:ListAllMyBuckets`, only scoped
-access to this one key):
+- The briefing named the exact object, so I went straight for its version history rather than a bucket-wide listing (which was denied anyway - `gate-investigator` doesn't have `s3:ListAllMyBuckets`, only scoped access to this one key):
 
 ```
 $ aws s3api list-object-versions --bucket ashguard-order-custody \
@@ -123,11 +109,8 @@ $ aws s3api list-object-versions --bucket ashguard-order-custody \
 }
 ```
 
-The delete marker and the "latest" version share the same timestamp
-(`00:00:11Z`) - meaning someone deleted the object (creating the delete
-marker) and immediately uploaded a replacement on top of it, all within
-the same second. That's the shape of a deliberate swap, not an edit.
-Pulling both real versions and diffing them:
+- The delete marker and the "latest" version share the same timestamp (`00:00:11Z`) - meaning someone deleted the object (creating the delete marker) and immediately uploaded a replacement on top of it, all within the same second.
+- That's the shape of a deliberate swap, not an edit. Pulling both real versions and diffing them:
 
 ```
 $ aws s3api get-object --bucket ashguard-order-custody \
@@ -151,13 +134,10 @@ $ diff order-v1.json order-current.json
 +  "ledger_hash": "sha256:...a5"
 ```
 
-That's the forged "false order" from the scenario text: the real record
-was `SEALED` / `PENDING_APPROVAL`, and the object that replaced it claims
-`RELEASED` under a fabricated "emergency writ" with attestation
-conveniently waived - and even the `ledger_hash` was hand-edited by one
-trailing hex character (`...a4` -> `...a5`) rather than genuinely
-recomputed, which is exactly the kind of "small mark a copyist misses"
-the scenario text points at.
+- That's the forged "false order" from the scenario text:
+  - The real record was `SEALED` / `PENDING_APPROVAL`.
+  - The object that replaced it claims `RELEASED` under a fabricated "emergency writ" with attestation conveniently waived.
+  - Even the `ledger_hash` was hand-edited by one trailing hex character (`...a4` -> `...a5`) rather than genuinely recomputed - exactly the kind of "small mark a copyist misses" the scenario text points at.
 
 **Flag 4 - full S3 path of the tampered object:**
 ```
@@ -166,9 +146,7 @@ s3://ashguard-order-custody/custody/east-gate-order.json
 
 ## Step 3 - Pulling and sorting the full CloudTrail history
 
-`lookup-events` paginates in batches of 50 with a `NextToken`. Rather
-than click through pages by hand, I scripted full pagination and sorted
-everything chronologically:
+- `lookup-events` paginates in batches of 50 with a `NextToken`. Rather than click through pages by hand, I scripted full pagination and sorted everything chronologically:
 
 ```python
 import subprocess, json
@@ -186,13 +164,8 @@ while True:
 # 609 events total
 ```
 
-(In hindsight, `--max-items 1000` on a single `aws cloudtrail
-lookup-events` call auto-paginates through botocore's own paginator and
-gets the same 609 events in one shot - I hand-rolled the loop first and
-only found the shortcut afterward.)
-
-Grouping by `sourceIPAddress` immediately separated the actors - this
-was the single most useful pivot in the whole investigation:
+- (In hindsight, `--max-items 1000` on a single `aws cloudtrail lookup-events` call auto-paginates through botocore's own paginator and gets the same 609 events in one shot - I hand-rolled the loop first and only found the shortcut afterward.)
+- Grouping by `sourceIPAddress` immediately separated the actors - this was the single most useful pivot in the whole investigation:
 
 | Source IP | Identity seen | Event count | Time range |
 |---|---|---|---|
@@ -201,13 +174,9 @@ was the single most useful pivot in the whole investigation:
 | `127.0.0.1` | `root` | 26 | infra/grader setup noise (`CreateTrail`, `CreateUser`, etc.) |
 | `124.13.11.143` | `gate-investigator` | - | my own investigator session |
 
-`10.41.53.22` is clearly the legitimate internal gatehouse clerk -
-almost five days of steady `ListObjectsV2`/`HeadObject`/`GetObject`
-traffic under the real `coalition-gate-clerk` IAM user, going quiet at
-`21:00:07Z`. One minute later, a completely different IP
-(`198.18.44.91`) shows up calling `GetCallerIdentity` under a *different*
-IAM user (`seal-copyist-contractor`) it had never used before. That
-hand-off is the attacker session boundary.
+- `10.41.53.22` is clearly the legitimate internal gatehouse clerk - almost five days of steady `ListObjectsV2`/`HeadObject`/`GetObject` traffic under the real `coalition-gate-clerk` IAM user, going quiet at `21:00:07Z`.
+- One minute later, a completely different IP (`198.18.44.91`) shows up calling `GetCallerIdentity` under a *different* IAM user (`seal-copyist-contractor`) it had never used before.
+- That hand-off is the attacker session boundary.
 
 **Flag 7 - IP address for the AssumeRole and destructive S3 calls:**
 ```
@@ -241,9 +210,7 @@ GetCallerIdentity
 
 ## Step 5 - Reconstructing the attacker's full timeline
 
-Filtering strictly to `198.18.44.91` and printing every event in order,
-with request parameters and error fields, gave the whole attack
-end-to-end:
+- Filtering strictly to `198.18.44.91` and printing every event in order, with request parameters and error fields, gave the whole attack end-to-end:
 
 ```
 21:01:07  GetCallerIdentity                                    (seal-copyist-contractor)
@@ -273,19 +240,12 @@ end-to-end:
 00:00:11.287  PutObject           key=custody/east-gate-order.json   <- the forged replacement
 ```
 
-Two things stood out immediately. First, the attacker tried a direct
-`GetObject` on the order and got denied *before* ever calling
-`AssumeRole` - meaning the read-only `seal-copyist-contractor` user
-genuinely can't touch this object on its own, so escalation was
-necessary, not optional. Second, there are **three** `AssumeRole` calls
-total, not one: an early exploratory attempt at `21:36:41`(role
-`ashguard-order-auditor`, session name `seal-copyist-session`) that
-failed, and then - right at the very end, seconds before the
-destructive calls - a second attempt at the *same* `ashguard-order-auditor`
-role (this time with session name `coalition-gate-clerk`, clearly trying
-to impersonate the legitimate clerk's identity in the audit trail) that
-also failed, immediately followed by a third attempt against a
-*different* role, `ashguard-order-scanner`, which succeeded.
+- Two things stood out immediately:
+  - The attacker tried a direct `GetObject` on the order and got denied *before* ever calling `AssumeRole` - meaning the read-only `seal-copyist-contractor` user genuinely can't touch this object on its own, so escalation was necessary, not optional.
+  - There are **three** `AssumeRole` calls total, not one:
+    - An early exploratory attempt at `21:36:41` (role `ashguard-order-auditor`, session name `seal-copyist-session`) that failed.
+    - Right at the very end, seconds before the destructive calls, a second attempt at the *same* `ashguard-order-auditor` role (this time with session name `coalition-gate-clerk`, clearly trying to impersonate the legitimate clerk's identity in the audit trail) that also failed.
+    - Immediately followed by a third attempt against a *different* role, `ashguard-order-scanner`, which succeeded.
 
 **Flag 3 - S3 API action the attacker attempted that was explicitly denied before assuming a role:**
 ```
@@ -312,23 +272,14 @@ arn:aws:iam::638291047582:role/ashguard-order-scanner
 coalition-gate-clerk
 ```
 
-That reused session name is the sharpest detail in the whole trail: the
-attacker deliberately set `roleSessionName=coalition-gate-clerk` on the
-role they *did* get into, so that the resulting STS principal ARN in
-every subsequent CloudTrail event -
-`arn:aws:sts::...:assumed-role/ashguard-order-scanner/coalition-gate-clerk`
-- visually echoes the legitimate clerk's name, even though the actual
-long-lived identity behind it is `seal-copyist-contractor`. If you only
-skim the `userIdentity.arn` field and don't check the access key ID or
-the calling IP, this session name is built to make you misattribute the
-destructive calls to the real clerk.
+- That reused session name is the sharpest detail in the whole trail:
+  - The attacker deliberately set `roleSessionName=coalition-gate-clerk` on the role they *did* get into, so that the resulting STS principal ARN in every subsequent CloudTrail event - `arn:aws:sts::...:assumed-role/ashguard-order-scanner/coalition-gate-clerk` - visually echoes the legitimate clerk's name, even though the actual long-lived identity behind it is `seal-copyist-contractor`.
+  - If you only skim the `userIdentity.arn` field and don't check the access key ID or the calling IP, this session name is built to make you misattribute the destructive calls to the real clerk.
 
 ## Step 6 - The destructive calls
 
-The three calls made under the assumed role, in order: `ListBucketVersions`
-(confirming the current version to target), `DeleteObject` (creating the
-delete marker seen in Step 2), and `PutObject` (uploading the forged
-`RELEASED` document). Both destructive calls carry the same STS principal:
+- The three calls made under the assumed role, in order: `ListBucketVersions` (confirming the current version to target), `DeleteObject` (creating the delete marker seen in Step 2), and `PutObject` (uploading the forged `RELEASED` document).
+- Both destructive calls carry the same STS principal:
 
 ```json
 "userIdentity": {
@@ -367,54 +318,17 @@ PutObject
 
 ## Methodology takeaways for next time
 
-1. **When an instance card gives two `IP:PORT` pairs with no labels,
-   probe both before assuming which is which.** A plain `curl -sI`
-   against each is enough - a raw AWS-shaped JSON error with
-   `x-amzn-RequestId` headers on an unauthenticated request is a dead
-   giveaway you've found the API endpoint, not the UI.
-2. **A delete marker and a new object version sharing the same
-   timestamp is the signature of a deliberate swap**, not an innocent
-   edit - worth checking `list-object-versions` for delete markers even
-   when the question only asks about "tampering."
-3. **Group CloudTrail events by `sourceIPAddress` before anything
-   else.** It's the fastest way to separate legitimate long-running
-   service/user traffic from a short, bursty session that starts right
-   after the legitimate one goes quiet.
-4. **Don't assume `AssumeRole` is a single event just because you found
-   one destructive session.** Check for *all* calls to that action -
-   failed attempts against a different role name are often the more
-   interesting artifact, showing what the attacker wanted but couldn't
-   get, versus what they settled for.
-5. **A `roleSessionName` is attacker-controlled and shows up verbatim in
-   every subsequent event's `userIdentity.arn`.** Never attribute an
-   assumed-role session to a person by session name alone - always cross-
-   check the calling IP and, where available, the `accessKeyId` behind
-   the assumption, since an attacker can deliberately pick a session name
-   that impersonates a legitimate identity in the log.
-6. **`aws cloudtrail lookup-events --max-items N`** auto-paginates
-   through botocore's built-in paginator in a single call - no need to
-   hand-roll a `NextToken` loop unless you want per-page control.
+- **When an instance card gives two `IP:PORT` pairs with no labels, probe both before assuming which is which.** A plain `curl -sI` against each is enough - a raw AWS-shaped JSON error with `x-amzn-RequestId` headers on an unauthenticated request is a dead giveaway you've found the API endpoint, not the UI.
+- **A delete marker and a new object version sharing the same timestamp is the signature of a deliberate swap**, not an innocent edit - worth checking `list-object-versions` for delete markers even when the question only asks about "tampering."
+- **Group CloudTrail events by `sourceIPAddress` before anything else.** It's the fastest way to separate legitimate long-running service/user traffic from a short, bursty session that starts right after the legitimate one goes quiet.
+- **Don't assume `AssumeRole` is a single event just because you found one destructive session.** Check for *all* calls to that action - failed attempts against a different role name are often the more interesting artifact, showing what the attacker wanted but couldn't get, versus what they settled for.
+- **A `roleSessionName` is attacker-controlled and shows up verbatim in every subsequent event's `userIdentity.arn`.** Never attribute an assumed-role session to a person by session name alone - always cross-check the calling IP and, where available, the `accessKeyId` behind the assumption, since an attacker can deliberately pick a session name that impersonates a legitimate identity in the log.
+- **`aws cloudtrail lookup-events --max-items N`** auto-paginates through botocore's built-in paginator in a single call - no need to hand-roll a `NextToken` loop unless you want per-page control.
 
 ## If asked to explain this live
 
-This was an S3-object-tampering-plus-CloudTrail-attribution challenge.
-I got read-only investigator credentials pointed at a LocalStack-style
-AWS API endpoint (found by probing both instance ports and picking the
-one returning raw AWS JSON errors), and access to a versioned S3 bucket
-plus a CloudTrail trail. `list-object-versions` on the order document
-showed a delete marker and a replacement version created in the same
-second, and diffing the two real versions showed the record had been
-flipped from `SEALED`/`PENDING_APPROVAL` to a forged `RELEASED` status
-citing a fake emergency writ, with even the `ledger_hash` hand-edited by
-one hex character. I then paginated all 609 CloudTrail events and
-grouped them by source IP, which cleanly separated five days of
-legitimate clerk traffic from a short attacker session starting exactly
-one minute after the clerk's last call. The attacker started as IAM user
-`seal-copyist-contractor`, got denied on a direct `GetObject`, tried and
-failed to assume an `ashguard-order-auditor` role twice (the second
-attempt using the session name `coalition-gate-clerk`, apparently to
-make the resulting principal ARN look like the real clerk), then
-succeeded assuming a different role, `ashguard-order-scanner` - still
-under that same spoofed session name - and used it to `DeleteObject`
-the real order and `PutObject` the forged one, all within roughly half
-a second.
+- This was an S3-object-tampering-plus-CloudTrail-attribution challenge.
+- I got read-only investigator credentials pointed at a LocalStack-style AWS API endpoint (found by probing both instance ports and picking the one returning raw AWS JSON errors), and access to a versioned S3 bucket plus a CloudTrail trail.
+- `list-object-versions` on the order document showed a delete marker and a replacement version created in the same second, and diffing the two real versions showed the record had been flipped from `SEALED`/`PENDING_APPROVAL` to a forged `RELEASED` status citing a fake emergency writ, with even the `ledger_hash` hand-edited by one hex character.
+- I then paginated all 609 CloudTrail events and grouped them by source IP, which cleanly separated five days of legitimate clerk traffic from a short attacker session starting exactly one minute after the clerk's last call.
+- The attacker started as IAM user `seal-copyist-contractor`, got denied on a direct `GetObject`, tried and failed to assume an `ashguard-order-auditor` role twice (the second attempt using the session name `coalition-gate-clerk`, apparently to make the resulting principal ARN look like the real clerk), then succeeded assuming a different role, `ashguard-order-scanner` - still under that same spoofed session name - and used it to `DeleteObject` the real order and `PutObject` the forged one, all within roughly half a second.

