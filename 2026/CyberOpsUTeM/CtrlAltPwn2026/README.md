@@ -18,14 +18,14 @@ actually worked through on 5 June 2026.
 
 | # | Track | Challenge | Category | Points | Result | Write-up |
 |---|---|---|---|---|---|---|
-| 1 | OSINT | Red Gate Mystery | OSINT | 100 | Solved | [RedGateMystery](./RedGateMystery/) |
-| 2 | Cryptography | Warm Up :D | Crypto | 100 | Solved | [WarmUp](./WarmUp/) |
-| 3 | Reverse Engineering | `simple_RE` | Reverse Engineering | — | Solved | [SimpleRE](./SimpleRE/) |
-| 4 | Digital Forensics | Filter the noise, find the gold | Forensics | — | Solved | [FilterTheNoise](./FilterTheNoise/) |
-| 5 | Penetration Testing | ICTFUTeM (TryHackMe room) | Pentest | — | Rooted | [ICTFUTeM-Pentest](./ICTFUTeM-Pentest/) |
-| 6 | CTF board (afternoon) | Archlight | — | 100 | Solved | [Archlight](./Archlight/) |
-| 7 | Talk | "Initial Access — How Do We Actually Break In?" | — | — | Attended | see below |
-| 8 | CTF board (after hours) | devops-cap | — | 100 (Easy) | Attempted | [DevOpsCap](./DevOpsCap/) |
+| 01 | OSINT | Red Gate Mystery | OSINT | 100 | Solved | [RedGateMystery](./01-RedGateMystery/) |
+| 02 | Cryptography | Warm Up :D | Crypto | 100 | Solved | [WarmUp](./02-WarmUp/) |
+| 03 | Reverse Engineering | `simple_RE` | Reverse Engineering | — | Solved | [SimpleRE](./03-SimpleRE/) |
+| 04 | Digital Forensics | Filter the noise, find the gold | Forensics | — | Solved | [FilterTheNoise](./04-FilterTheNoise/) |
+| 05 | Penetration Testing | ICTFUTeM (TryHackMe room) | Pentest | — | Rooted | [ICTFUTeM-Pentest](./05-ICTFUTeM-Pentest/) |
+| 06 | CTF board (afternoon) | Archlight | — | 100 | Solved | [Archlight](./06-Archlight/) |
+| — | Talk | "Initial Access — How Do We Actually Break In?" | — | — | Attended | see below |
+| 07 | CTF board (after hours) | devops-cap | — | 100 (Easy) | Attempted | [DevOpsCap](./07-DevOpsCap/) |
 
 ## The "Initial Access" talk
 

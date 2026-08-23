@@ -1,4 +1,4 @@
-# 05 - Wireless Connections
+# 08 - Wireless Connections
 
 **Category:** Hardware
 **Points:** 975

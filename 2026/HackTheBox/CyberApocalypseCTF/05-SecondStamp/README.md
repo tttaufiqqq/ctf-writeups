@@ -1,4 +1,4 @@
-# 06 - Second Stamp
+# 05 - Second Stamp
 
 **Category:** Blockchain
 **Points:** 975

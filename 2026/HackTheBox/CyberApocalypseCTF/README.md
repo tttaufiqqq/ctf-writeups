@@ -11,13 +11,15 @@
 
 ## Writeups
 
-| Challenge | Category | Difficulty | Tags | Date |
-|---|---|---|---|---|
-| [Force Push](./ForcePush/) | Forensics | Very Easy | git, forensics | 25/07/2026 |
-| [Deception Strategy](./DeceptionStrategy/) | Forensics | Easy | DFIR, procmon, pcap, radare2, ghidra, RC4 | 25/07/2026 |
-| [CorpSyncAudit](./CorpSyncAudit/) | Reverse Engineering | Hard | radare2, ghidra, wine, gdb | 26/07/2026 |
-| [What the Shard Displayed](./WhatTheShardDisplayed/) | Hardware | Medium | i2c, sigrok, ssd1306, logic-analyzer | 28/07/2026 |
-| [Second Stamp](./SecondStamp/) | Blockchain | Medium | sui, move, defi, package-upgrade, ptb | 28/07/2026 |
-| [False Order](./FalseOrder/) | Cloud | Medium | aws, cloudtrail, s3-versioning, iam, assume-role | 28/07/2026 |
-| [Crownspire Transfer](./CrownspireTransfer/) | ICS | Medium | iec-104, scada, rtu, protocol-auth | 28/07/2026 |
-| [Wireless Connections](./WirelessConnections/) | Hardware | Hard | esp32-s3, xtensa, ghidra, firmware, esp-now | 29/07/2026 |
+Folders are numbered in solve order (01–08).
+
+| # | Challenge | Category | Difficulty | Tags | Date |
+|---|---|---|---|---|---|
+| 01 | [Force Push](./01-ForcePush/) | Forensics | Very Easy | git, forensics | 25/07/2026 |
+| 02 | [Deception Strategy](./02-DeceptionStrategy/) | Forensics | Easy | DFIR, procmon, pcap, radare2, ghidra, RC4 | 25/07/2026 |
+| 03 | [CorpSyncAudit](./03-CorpSyncAudit/) | Reverse Engineering | Hard | radare2, ghidra, wine, gdb | 26/07/2026 |
+| 04 | [What the Shard Displayed](./04-WhatTheShardDisplayed/) | Hardware | Medium | i2c, sigrok, ssd1306, logic-analyzer | 28/07/2026 |
+| 05 | [Second Stamp](./05-SecondStamp/) | Blockchain | Medium | sui, move, defi, package-upgrade, ptb | 28/07/2026 |
+| 06 | [False Order](./06-FalseOrder/) | Cloud | Medium | aws, cloudtrail, s3-versioning, iam, assume-role | 28/07/2026 |
+| 07 | [Crownspire Transfer](./07-CrownspireTransfer/) | ICS | Medium | iec-104, scada, rtu, protocol-auth | 28/07/2026 |
+| 08 | [Wireless Connections](./08-WirelessConnections/) | Hardware | Hard | esp32-s3, xtensa, ghidra, firmware, esp-now | 29/07/2026 |
